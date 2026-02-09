@@ -1,6 +1,9 @@
 import { Vector2 } from "./Vector2";
 import { convertImage } from "./PixelsToSvg";
 
+// Declare require for importing CommonJS module
+declare function require(moduleName: string): any;
+
 const chroma = require("chroma-js");
 
 type ColorMapType = string[] | null;

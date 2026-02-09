@@ -9,7 +9,10 @@
       "Bash(npx webpack:*)",
       "Bash(npx tsc:*)",
       "Bash(npx -p typescript tsc:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nConvert Graph to TypeScript\n\n- Rename Graph.js to Graph.ts with full type annotations\n- Add ParseTreeNode, AdjacencyMatrix, DistanceMatrix, Bridge types\n- Create types.ts for shared type definitions\n- Export IBracket interface from Atom.ts\n- Add proper TypeScript types to all Graph methods\n- Fix type narrowing issues with null checks\n- Add JSDoc examples for key methods like getBridges\\(\\)\nEOF\n\\)\")",
+      "Bash(test:*)",
+      "Bash(git commit:*)"
     ]
   }
 }

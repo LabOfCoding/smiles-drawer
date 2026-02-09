@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(findstr:*)",
+      "Bash(grep:*)",
+      "Bash(find:*)",
+      "Bash(git mv:*)",
+      "Bash(npm run build:*)",
+      "Bash(npx webpack:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npx -p typescript tsc:*)",
+      "Bash(git add:*)"
+    ]
+  }
+}

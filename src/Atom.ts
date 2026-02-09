@@ -1,7 +1,10 @@
-interface IBracket {
+export interface IBracket {
   hcount?: number;
   charge?: ("--" | "-" | "+" | "++")[];
   isotope?: number;
+  chirality?: string;
+  element?: string;
+  class?: number;
 }
 
 interface IPseudoElement {

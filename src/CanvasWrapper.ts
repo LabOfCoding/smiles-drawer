@@ -4,37 +4,75 @@ import { MathHelper } from "./MathHelper";
 import { Line } from "./Line";
 import { Vertex } from "./Vertex";
 import { Ring } from "./Ring";
+import { ThemeManager } from "./ThemeManager";
+
+/**
+ * Drawing options interface for CanvasWrapper
+ */
+interface DrawingOptions {
+  width: number;
+  height: number;
+  bondThickness: number;
+  bondLength: number;
+  shortBondLength: number;
+  bondSpacing: number;
+  padding: number;
+  fontSizeLarge: number;
+  fontSizeSmall: number;
+  halfFontSizeLarge: number;
+  fifthFontSizeSmall: number;
+  quarterFontSizeLarge: number;
+  [key: string]: any;
+}
 
 /**
  * A class wrapping a canvas element.
  *
- * @property {HTMLElement} canvas The HTML element for the canvas associated with this CanvasWrapper instance.
+ * @property {HTMLCanvasElement} canvas The HTML element for the canvas associated with this CanvasWrapper instance.
  * @property {CanvasRenderingContext2D} ctx The CanvasRenderingContext2D of the canvas associated with this CanvasWrapper instance.
- * @property {Object} colors The colors object as defined in the SmilesDrawer options.
- * @property {Object} opts The SmilesDrawer options.
+ * @property {ThemeManager} themeManager Theme manager for getting colors.
+ * @property {DrawingOptions} opts The SmilesDrawer options.
  * @property {Number} drawingWidth The width of the canvas.
  * @property {Number} drawingHeight The height of the canvas.
  * @property {Number} offsetX The horizontal offset required for centering the drawing.
  * @property {Number} offsetY The vertical offset required for centering the drawing.
- * @property {Number} fontLarge The large font size in pt.
- * @property {Number} fontSmall The small font size in pt.
+ * @property {String} fontLarge The large font size in pt.
+ * @property {String} fontSmall The small font size in pt.
  */
 export class CanvasWrapper {
+  public canvas: HTMLCanvasElement;
+  public ctx: CanvasRenderingContext2D;
+  private themeManager: ThemeManager;
+  private opts: DrawingOptions;
+  public drawingWidth: number;
+  public drawingHeight: number;
+  public offsetX: number;
+  public offsetY: number;
+  private fontLarge: string;
+  private fontSmall: string;
+  private hydrogenWidth: number;
+  private halfHydrogenWidth: number;
+  private halfBondThickness: number;
+  private devicePixelRatio: number = 1;
+  private backingStoreRatio: number = 1;
+  private ratio: number = 1;
+  private colors: Record<string, string> = {};
+
   /**
    * The constructor for the class CanvasWrapper.
    *
    * @param {(String|HTMLElement)} target The canvas id or the canvas HTMLElement.
    * @param {ThemeManager} themeManager Theme manager for setting proper colors.
-   * @param {Object} options The smiles drawer options object.
+   * @param {DrawingOptions} options The smiles drawer options object.
    */
-  constructor(target, themeManager, options) {
-    if (typeof target === "string" || target instanceof String) {
-      this.canvas = document.getElementById(target);
+  constructor(target: string | HTMLCanvasElement, themeManager: ThemeManager, options: DrawingOptions) {
+    if (typeof target === "string") {
+      this.canvas = document.getElementById(target) as HTMLCanvasElement;
     } else {
       this.canvas = target;
     }
 
-    this.ctx = this.canvas.getContext("2d");
+    this.ctx = this.canvas.getContext("2d")!;
     this.themeManager = themeManager;
     this.opts = options;
     this.drawingWidth = 0.0;
@@ -64,14 +102,15 @@ export class CanvasWrapper {
    * @param {Number} width
    * @param {Number} height
    */
-  updateSize(width, height) {
+  public updateSize(width: number, height: number): void {
     this.devicePixelRatio = window.devicePixelRatio || 1;
+    const ctx = this.ctx as any; // Vendor-prefixed properties not in standard types
     this.backingStoreRatio =
-      this.ctx.webkitBackingStorePixelRatio ||
-      this.ctx.mozBackingStorePixelRatio ||
-      this.ctx.msBackingStorePixelRatio ||
-      this.ctx.oBackingStorePixelRatio ||
-      this.ctx.backingStorePixelRatio ||
+      ctx.webkitBackingStorePixelRatio ||
+      ctx.mozBackingStorePixelRatio ||
+      ctx.msBackingStorePixelRatio ||
+      ctx.oBackingStorePixelRatio ||
+      ctx.backingStorePixelRatio ||
       1;
     this.ratio = this.devicePixelRatio / this.backingStoreRatio;
 
@@ -92,7 +131,7 @@ export class CanvasWrapper {
    *
    * @param {Object} theme A theme from the smiles drawer options.
    */
-  setTheme(theme) {
+  public setTheme(theme: Record<string, string>): void {
     this.colors = theme;
   }
 
@@ -101,7 +140,7 @@ export class CanvasWrapper {
    *
    * @param {Vertex[]} vertices An array of vertices containing the vertices associated with the current molecule.
    */
-  scale(vertices) {
+  public scale(vertices: Vertex[]): void {
     // Figure out the final size of the image
     let maxX = -Number.MAX_VALUE;
     let maxY = -Number.MAX_VALUE;
@@ -154,7 +193,7 @@ export class CanvasWrapper {
   /**
    * Resets the transform of the canvas.
    */
-  reset() {
+  public reset(): void {
     this.ctx.setTransform(1, 0, 0, 1, 0, 0);
   }
 
@@ -164,7 +203,7 @@ export class CanvasWrapper {
    * @param {String} key The color key in the theme (e.g. C, N, BACKGROUND, ...).
    * @returns {String} A color hex value.
    */
-  getColor(key) {
+  public getColor(key: string): string {
     key = key.toUpperCase();
 
     if (key in this.colors) {
@@ -184,7 +223,7 @@ export class CanvasWrapper {
    * @param {Boolean} [debug=false] Draw in debug mode.
    * @param {String} [debugText=''] A debug message.
    */
-  drawCircle(x, y, radius, color, fill = true, debug = false, debugText = "") {
+  public drawCircle(x: number, y: number, radius: number, color: string, fill: boolean = true, debug: boolean = false, debugText: string = ""): void {
     let ctx = this.ctx;
     let offsetX = this.offsetX;
     let offsetY = this.offsetY;
@@ -225,7 +264,7 @@ export class CanvasWrapper {
    * @param {Boolean} [dashed=false] Whether or not the line is dashed.
    * @param {Number} [alpha=1.0] The alpha value of the color.
    */
-  drawLine(line, dashed = false, alpha = 1.0) {
+  public drawLine(line: Line, dashed: boolean = false, alpha: number = 1.0): void {
     let ctx = this.ctx;
     let offsetX = this.offsetX;
     let offsetY = this.offsetY;
@@ -276,13 +315,11 @@ export class CanvasWrapper {
     let gradient = this.ctx.createLinearGradient(l.x, l.y, r.x, r.y);
     gradient.addColorStop(
       0.4,
-      this.themeManager.getColor(line.getLeftElement()) ||
-        this.themeManager.getColor("C")
+      this.themeManager.getColor(line.getLeftElement() || "C")
     );
     gradient.addColorStop(
       0.6,
-      this.themeManager.getColor(line.getRightElement()) ||
-        this.themeManager.getColor("C")
+      this.themeManager.getColor(line.getRightElement() || "C")
     );
 
     if (dashed) {
@@ -306,7 +343,7 @@ export class CanvasWrapper {
    * @param {Line} line A line.
    * @param {Number} width The wedge width.
    */
-  drawWedge(line, width = 1.0) {
+  public drawWedge(line: Line, width: number = 1.0): void {
     if (
       isNaN(line.from.x) ||
       isNaN(line.from.y) ||
@@ -391,13 +428,11 @@ export class CanvasWrapper {
     );
     gradient.addColorStop(
       0.4,
-      this.themeManager.getColor(line.getLeftElement()) ||
-        this.themeManager.getColor("C")
+      this.themeManager.getColor(line.getLeftElement() || "C")
     );
     gradient.addColorStop(
       0.6,
-      this.themeManager.getColor(line.getRightElement()) ||
-        this.themeManager.getColor("C")
+      this.themeManager.getColor(line.getRightElement() || "C")
     );
 
     ctx.fillStyle = gradient;
@@ -411,7 +446,7 @@ export class CanvasWrapper {
    *
    * @param {Line} line A line.
    */
-  drawDashedWedge(line) {
+  public drawDashedWedge(line: Line): void {
     if (
       isNaN(line.from.x) ||
       isNaN(line.from.y) ||
@@ -491,9 +526,7 @@ export class CanvasWrapper {
       if (!changed && t > 0.5) {
         ctx.stroke();
         ctx.beginPath();
-        ctx.strokeStyle =
-          this.themeManager.getColor(line.getRightElement()) ||
-          this.themeManager.getColor("C");
+        ctx.strokeStyle = this.themeManager.getColor(line.getRightElement() || "C");
         changed = true;
       }
 
@@ -514,7 +547,7 @@ export class CanvasWrapper {
    * @param {Number} y The y coordinate.
    * @param {String} text The debug text.
    */
-  drawDebugText(x, y, text) {
+  public drawDebugText(x: number, y: number, text: string): void {
     let ctx = this.ctx;
 
     ctx.save();
@@ -533,7 +566,7 @@ export class CanvasWrapper {
    * @param {Number} y The y position of the text.
    * @param {String} elementName The name of the element (single-letter).
    */
-  drawBall(x, y, elementName) {
+  public drawBall(x: number, y: number, elementName: string): void {
     let ctx = this.ctx;
 
     ctx.save();
@@ -558,7 +591,7 @@ export class CanvasWrapper {
    * @param {Number} y The y position of the point.
    * @param {String} elementName The name of the element (single-letter).
    */
-  drawPoint(x, y, elementName) {
+  public drawPoint(x: number, y: number, elementName: string): void {
     let ctx = this.ctx;
     let offsetX = this.offsetX;
     let offsetY = this.offsetY;
@@ -602,18 +635,18 @@ export class CanvasWrapper {
    * @param {Number} attachedPseudoElement.count The number of occurences that match the key.
    * @param {Number} attachedPseudoElement.hyrogenCount The number of hydrogens attached to each atom matching the key.
    */
-  drawText(
-    x,
-    y,
-    elementName,
-    hydrogens,
-    direction,
-    isTerminal,
-    charge,
-    isotope,
-    vertexCount,
-    attachedPseudoElement = {}
-  ) {
+  public drawText(
+    x: number,
+    y: number,
+    elementName: string,
+    hydrogens: number,
+    direction: string,
+    isTerminal: boolean,
+    charge: number,
+    isotope: number,
+    vertexCount: number,
+    attachedPseudoElement: Record<string, any> = {}
+  ): void {
     let ctx = this.ctx;
     let offsetX = this.offsetX;
     let offsetY = this.offsetY;
@@ -668,7 +701,7 @@ export class CanvasWrapper {
     ctx.font = this.fontLarge;
     ctx.fillStyle = this.themeManager.getColor("BACKGROUND");
 
-    let dim = ctx.measureText(elementName);
+    let dim = ctx.measureText(elementName) as TextMetrics & { totalWidth: number; height: number };
 
     dim.totalWidth = dim.width + chargeWidth;
     dim.height = parseInt(this.fontLarge, 10);
@@ -752,7 +785,7 @@ export class CanvasWrapper {
 
       hydrogenWidth = this.hydrogenWidth;
       ctx.font = this.fontSmall;
-      hydrogenCountWidth = ctx.measureText(hydrogens).width;
+      hydrogenCountWidth = ctx.measureText(hydrogens.toString()).width;
       cursorPosLeft -= hydrogenWidth + hydrogenCountWidth;
 
       if (direction === "left") {
@@ -776,7 +809,7 @@ export class CanvasWrapper {
 
       ctx.font = this.fontSmall;
       ctx.fillText(
-        hydrogens,
+        hydrogens.toString(),
         hx + this.halfHydrogenWidth + hydrogenCountWidth,
         hy + this.opts.fifthFontSizeSmall
       );
@@ -965,7 +998,7 @@ export class CanvasWrapper {
    * @param {Number} charge The integer indicating the charge.
    * @returns {String} A string representing a charge.
    */
-  getChargeText(charge) {
+  public getChargeText(charge: number): string {
     if (charge === 1) {
       return "+";
     } else if (charge === 2) {
@@ -987,7 +1020,7 @@ export class CanvasWrapper {
    * @param {String} [debugText=''] A string.
    * @param {String} [color='#f00'] A color in hex form.
    */
-  drawDebugPoint(x, y, debugText = "", color = "#f00") {
+  public drawDebugPoint(x: number, y: number, debugText: string = "", color: string = "#f00"): void {
     this.drawCircle(x, y, 2, color, true, true, debugText);
   }
 
@@ -996,7 +1029,7 @@ export class CanvasWrapper {
    *
    * @param {Ring} ring A ring.
    */
-  drawAromaticityRing(ring) {
+  public drawAromaticityRing(ring: Ring): void {
     let ctx = this.ctx;
     let radius = MathHelper.apothemFromSideLength(
       this.opts.bondLength,
@@ -1024,7 +1057,7 @@ export class CanvasWrapper {
    * Clear the canvas.
    *
    */
-  clear() {
+  public clear(): void {
     this.ctx.clearRect(0, 0, this.canvas.offsetWidth, this.canvas.offsetHeight);
   }
 }

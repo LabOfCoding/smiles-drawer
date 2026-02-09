@@ -13,7 +13,7 @@ export class MathHelper {
   }
 
   /** Two times PI. */
-  private static get twoPI(): number {
+  public static get twoPI(): number {
     return 2.0 * Math.PI;
   }
 
